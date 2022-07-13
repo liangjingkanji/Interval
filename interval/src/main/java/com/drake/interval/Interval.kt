@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit
  * @param initialDelay 第一次事件的间隔时间, 默认0
  * @param start 开始值, 当[start]]比[end]值大, 且end不等于-1时, 即为倒计时, 反之正计时
  */
-open class Interval(
+open class Interval @JvmOverloads constructor(
     var end: Long,
     private val period: Long,
     private val unit: TimeUnit,
@@ -69,6 +69,7 @@ open class Interval(
      * @param unit 时间单位
      * @param initialDelay 初次间隔时间, 默认为0即立即开始
      */
+    @JvmOverloads
     constructor(
         period: Long,
         unit: TimeUnit,
@@ -199,6 +200,7 @@ open class Interval(
      * @param lifecycleOwner 生命周期持有者, 一般为Activity/Fragment
      * @param lifeEvent 销毁生命周期, 默认为 [Lifecycle.Event.ON_DESTROY] 时停止时停止轮询器
      */
+    @JvmOverloads
     fun life(
         lifecycleOwner: LifecycleOwner,
         lifeEvent: Lifecycle.Event = Lifecycle.Event.ON_DESTROY
@@ -216,6 +218,7 @@ open class Interval(
      * 自动在指定生命周期后取消[cancel]轮询器
      * @param lifeEvent 销毁生命周期, 默认为 [Lifecycle.Event.ON_DESTROY] 时停止时停止轮询器
      */
+    @JvmOverloads
     fun life(
         fragment: Fragment,
         lifeEvent: Lifecycle.Event = Lifecycle.Event.ON_DESTROY
