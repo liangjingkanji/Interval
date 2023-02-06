@@ -2,11 +2,11 @@
 plugins {
     id 'com.android.application' version '7.1.3' apply false
     id 'com.android.library' version '7.1.3' apply false
-    id 'org.jetbrains.kotlin.android' version '1.6.21' apply false
+    id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
 }
 
 ext {
-    coroutine_version = '1.6.1'
+    coroutine_version = '1.6.4'
 }
 
 task clean(type: Delete) {
