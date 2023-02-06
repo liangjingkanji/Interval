@@ -113,7 +113,7 @@ dependencyResolutionManagement {
 implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0" // 协程(版本自定)
 implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
 
-implementation 'com.github.liangjingkanji:Interval:1.0.1'
+implementation 'com.github.liangjingkanji:Interval:1.0.2'
 ```
 
 
