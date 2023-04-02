@@ -32,6 +32,7 @@ import kotlinx.coroutines.channels.ticker
 import java.io.Closeable
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 /**
  * 创建一个轮询器
@@ -170,7 +171,8 @@ open class Interval @JvmOverloads constructor(
         if (state != IntervalStatus.STATE_ACTIVE) return
         scope?.cancel()
         state = IntervalStatus.STATE_PAUSE
-        delay = SystemClock.elapsedRealtime() - countTime
+        // 一个计时单位的总时间减去距离上次计时已过的时间，等于resume时需要delay的时间
+        delay = max(unit.toMillis(period) - (SystemClock.elapsedRealtime() - countTime), 0L)
     }
 
     /**
