@@ -20,6 +20,7 @@ package com.drake.interval
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -169,7 +170,7 @@ open class Interval @JvmOverloads constructor(
         if (state != IntervalStatus.STATE_ACTIVE) return
         scope?.cancel()
         state = IntervalStatus.STATE_PAUSE
-        delay = System.currentTimeMillis() - countTime
+        delay = SystemClock.elapsedRealtime() - countTime
     }
 
     /**
@@ -270,7 +271,7 @@ open class Interval @JvmOverloads constructor(
                     }
                 }
                 if (end != -1L && start > end) count-- else count++
-                countTime = System.currentTimeMillis()
+                countTime = SystemClock.elapsedRealtime()
             }
         }
     }
