@@ -18,6 +18,7 @@
 
 package com.drake.interval
 
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -26,9 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.TickerMode
-import kotlinx.coroutines.channels.ticker
 import java.io.Closeable
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
@@ -82,8 +80,7 @@ open class Interval @JvmOverloads constructor(
     private val finishList: MutableList<Interval.(Long) -> Unit> = mutableListOf()
     private var countTime = 0L
     private var delay = 0L
-    private var scope: CoroutineScope? = null
-    private lateinit var ticker: ReceiveChannel<Unit>
+    private var timer: CountDownTimer? = null
 
     /** 轮询器的计数 */
     var count = start
@@ -132,7 +129,7 @@ open class Interval @JvmOverloads constructor(
      */
     fun stop() {
         if (state == IntervalStatus.STATE_IDLE) return
-        scope?.cancel()
+        timer?.cancel()
         state = IntervalStatus.STATE_IDLE
         finishList.forEach {
             it.invoke(this, count)
@@ -145,7 +142,7 @@ open class Interval @JvmOverloads constructor(
      */
     fun cancel() {
         if (state == IntervalStatus.STATE_IDLE) return
-        scope?.cancel()
+        timer?.cancel()
         state = IntervalStatus.STATE_IDLE
     }
 
@@ -169,7 +166,7 @@ open class Interval @JvmOverloads constructor(
      */
     fun pause() {
         if (state != IntervalStatus.STATE_ACTIVE) return
-        scope?.cancel()
+        timer?.cancel()
         state = IntervalStatus.STATE_PAUSE
         // 一个计时单位的总时间减去距离上次计时已过的时间，等于resume时需要delay的时间
         delay = max(unit.toMillis(period) - (SystemClock.elapsedRealtime() - countTime), 0L)
@@ -191,7 +188,7 @@ open class Interval @JvmOverloads constructor(
     fun reset() {
         count = start
         delay = unit.toMillis(initialDelay)
-        scope?.cancel()
+        timer?.cancel()
         if (state == IntervalStatus.STATE_ACTIVE) launch()
     }
 
@@ -256,26 +253,35 @@ open class Interval @JvmOverloads constructor(
     //</editor-fold>
 
     /** 启动轮询器 */
-    @OptIn(ObsoleteCoroutinesApi::class)
     private fun launch(delay: Long = unit.toMillis(initialDelay)) {
-        scope = CoroutineScope(Dispatchers.Main)
-        scope?.launch {
-            ticker = ticker(unit.toMillis(period), delay, mode = TickerMode.FIXED_DELAY)
-            for (unit in ticker) {
+        val millisInFuture = if (end == -1L) { // 正计时-无限
+            Long.MAX_VALUE - unit.toMillis(count)
+        } else if (end > start) { // 正计时
+            unit.toMillis(end - count)
+        } else { // 倒计时
+            unit.toMillis(count - end)
+        }
+        timer = object : CountDownTimer(millisInFuture + delay, unit.toMillis(period)) {
+            override fun onTick(millisUntilFinished: Long) {
+                if (delay != 0L && millisUntilFinished <= delay) return
                 subscribeList.forEach {
                     it.invoke(this@Interval, count)
                 }
-                if (end != -1L && count == end) {
-                    scope?.cancel()
-                    state = IntervalStatus.STATE_IDLE
-                    finishList.forEach {
-                        it.invoke(this@Interval, count)
-                    }
+                count = if (end == -1L && end > start) { // 正计时
+                    unit.convert(millisInFuture - millisUntilFinished, TimeUnit.MILLISECONDS) + start
+                } else { // 倒计时
+                    unit.convert(millisUntilFinished, TimeUnit.MILLISECONDS) + end
                 }
-                if (end != -1L && start > end) count-- else count++
                 countTime = SystemClock.elapsedRealtime()
             }
-        }
+
+            override fun onFinish() {
+                state = IntervalStatus.STATE_IDLE
+                finishList.forEach {
+                    it.invoke(this@Interval, count)
+                }
+            }
+        }.start()
     }
 
     private fun runMain(block: () -> Unit) {
