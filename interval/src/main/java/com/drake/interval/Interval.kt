@@ -284,11 +284,16 @@ open class Interval @JvmOverloads constructor(
         }.start()
     }
 
+    /**
+     * 在主线程运行
+     */
+    private val mainThreadHandler by lazy { Handler(Looper.getMainLooper()) }
+
     private fun runMain(block: () -> Unit) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             block()
         } else {
-            Handler(Looper.getMainLooper()).post { block() }
+            mainThreadHandler.post { block() }
         }
     }
 }
