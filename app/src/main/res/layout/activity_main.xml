@@ -39,5 +39,15 @@
             android:textStyle="bold"
             tools:text="0" />
 
+        <TextView
+            android:id="@+id/tvFragment2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="100dp"
+            android:gravity="center"
+            android:textSize="32dp"
+            android:textStyle="bold"
+            tools:text="0" />
+
     </FrameLayout>
 </layout>
