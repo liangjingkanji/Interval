@@ -275,6 +275,7 @@ open class Interval @JvmOverloads constructor(
         scope?.launch {
             ticker = ticker(unit.toMillis(period), delay, mode = TickerMode.FIXED_DELAY)
             for (unit in ticker) {
+                countTime = SystemClock.elapsedRealtime()
                 subscribeList.forEach {
                     it.invoke(this@Interval, count)
                 }
@@ -284,9 +285,9 @@ open class Interval @JvmOverloads constructor(
                     finishList.forEach {
                         it.invoke(this@Interval, count)
                     }
+                } else {
+                    if (end != -1L && start > end) count-- else count++
                 }
-                if (end != -1L && start > end) count-- else count++
-                countTime = SystemClock.elapsedRealtime()
             }
         }
     }
